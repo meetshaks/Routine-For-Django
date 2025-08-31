@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Learning Dashboard - Detailed</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #4e73df;
+            --success: #1cc88a;
+            --info: #36b9cc;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --light: #f8f9fc;
+            --dark: #5a5c69;
+            --secondary: #858796;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+        
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #2e59d9 100%);
+            color: white;
+            padding: 2.5rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        }
+        
+        .progress-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .progress-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        .progress-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success) 0% 0%, #e9ecef 0% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0 auto 1rem;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 30px rgba(28, 200, 138, 0.1);
+        }
+        
+        .progress-circle::before {
+            content: "";
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-circle:hover::before {
+            transform: scale(0.95);
+        }
+        
+        .progress-value {
+            position: relative;
+            z-index: 1;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--dark);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .progress-circle:hover .progress-value {
+            transform: scale(1.1);
+        }
+        
+        .week-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            position: relative;
+        }
+        
+        .week-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .week-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .week-card:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .week-header {
+            color: white;
+            padding: 1.25rem 1.75rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+        
+        .week-header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+        }
+        
+        .day-card {
+            border: none;
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .day-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .day-card.completed {
+            background: linear-gradient(135deg, rgba(28, 200, 138, 0.1) 0%, rgba(28, 200, 138, 0.05) 100%);
+            border-left: 4px solid var(--success);
+        }
+        
+        .day-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .day-card.completed .day-number {
+            background: var(--success);
+        }
+        
+        .day-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.3rem;
+        }
+        
+        .day-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .day-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tag {
+            background: rgba(78, 115, 223, 0.1);
+            color: var(--primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        
+        .day-card.completed .tag {
+            background: rgba(28, 200, 138, 0.1);
+            color: var(--success);
+        }
+        
+        .btn-complete {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(78, 115, 223, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-complete::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn-complete:hover {
+            background: #2e59d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(78, 115, 223, 0.3);
+        }
+        
+        .btn-complete:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-complete:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(78, 115, 223, 0.2);
+        }
+        
+        .day-card.completed .btn-complete {
+            background: var(--success);
+            box-shadow: 0 2px 8px rgba(28, 200, 138, 0.2);
+        }
+        
+        .day-card.completed .btn-complete:hover {
+            box-shadow: 0 4px 12px rgba(28, 200, 138, 0.3);
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        .badge-primary {
+            background: var(--primary);
+        }
+        
+        .badge-success {
+            background: var(--success);
+        }
+        
+        .badge-info {
+            background: var(--info);
+        }
+        
+        .badge-warning {
+            background: var(--warning);
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .week-progress {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 10px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+        
+        .week-progress-bar {
+            height: 100%;
+            background: var(--success);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .achievement-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--warning) 0%, #dda20a 100%);
+            color: white;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0.25rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .achievement-badge:hover {
+            transform: scale(1.05);
+        }
+        
+        .achievement-badge i {
+            margin-right: 0.5rem;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #2e59d9 100%);
+            color: white;
+        }
+        
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        
+        .task-item {
+            padding: 0.75rem;
+            background: #f8f9fc;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .task-item.completed {
+            border-left-color: var(--success);
+            background: rgba(28, 200, 138, 0.05);
+        }
+        
+        .task-item h6 {
+            margin-bottom: 0.25rem;
+            color: var(--dark);
+        }
+        
+        .task-item p {
+            margin-bottom: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .notes-section {
+            background: #f8f9fc;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .notes-textarea {
+            width: 100%;
+            min-height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .time-tracker {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .timer-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .btn-timer {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+            margin: 0.25rem;
+        }
+        
+        .btn-timer:hover {
+            background: #2e59d9;
+            color: white;
+        }
+        
+        .btn-timer.stop {
+            background: var(--danger);
+        }
+        
+        .btn-timer.stop:hover {
+            background: #c0392b;
+        }
+        
+        .calendar-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+        
+        .calendar-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .calendar-header h3::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 2px;
+            display: inline-block;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.5rem;
+            cursor: pointer;
+            position: relative;
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid transparent;
+        }
+        
+        .calendar-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.05);
+            background: white;
+        }
+        
+        .calendar-day.today {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(78, 115, 223, 0.2);
+            font-weight: 600;
+        }
+        
+        .calendar-day.today::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+        }
+        
+        .calendar-day.completed {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 15px rgba(28, 200, 138, 0.2);
+        }
+        
+        .calendar-day.completed::before {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+        
+        .calendar-day.other-month {
+            color: var(--secondary);
+            background: rgba(0, 0, 0, 0.01);
+            cursor: default;
+        }
+        
+        .calendar-day.other-month:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
+            background: rgba(0, 0, 0, 0.01);
+        }
+        
+        .export-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .btn-export {
+            background: var(--info);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+            margin: 0.25rem;
+        }
+        
+        .btn-export:hover {
+            background: #258391;
+            color: white;
+        }
+        
+        .btn-reset {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+            margin: 0.25rem;
+        }
+        
+        .btn-reset:hover {
+            background: #c0392b;
+            color: white;
+        }
+        
+        .read-section, .code-section {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        
+        .read-section {
+            background-color: rgba(54, 185, 204, 0.1);
+            border-left: 3px solid var(--info);
+        }
+        
+        .code-section {
+            background-color: rgba(78, 115, 223, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .section-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .read-section .section-label {
+            color: var(--info);
+        }
+        
+        .code-section .section-label {
+            color: var(--primary);
+        }
+        
+        .section-content {
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold mb-2">Django + MySQL Learning Journey</h1>
+                    <p class="lead mb-0">Track your 30-day coding challenge progress</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-flex align-items-center justify-content-md-end">
+                        <i class="bi bi-calendar-check fs-1 me-3"></i>
+                        <div>
+                            <div class="fs-4 fw-bold" id="currentDay">Day 1</div>
+                            <div id="currentDate"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <!-- Progress Section -->
+        <div class="progress-container">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center">
+                    <div class="progress-circle" id="progressCircle">
+                        <div class="progress-value" id="progressValue">0%</div>
+                    </div>
+                    <h4 class="mt-3">Overall Progress</h4>
+                    <p class="text-muted"><span id="completedDays">0</span> of 30 days completed</p>
+                </div>
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-6 col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon text-primary">
+                                    <i class="bi bi-calendar3"></i>
+                                </div>
+                                <div class="stats-value" id="totalDays">30</div>
+                                <div class="stats-label">Total Days</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon text-success">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                                <div class="stats-value" id="completedCount">0</div>
+                                <div class="stats-label">Completed</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon text-warning">
+                                    <i class="bi bi-clock"></i>
+                                </div>
+                                <div class="stats-value" id="remainingDays">30</div>
+                                <div class="stats-label">Remaining</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon text-info">
+                                    <i class="bi bi-fire"></i>
+                                </div>
+                                <div class="stats-value" id="currentStreak">0</div>
+                                <div class="stats-label">Day Streak</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievements Section -->
+        <div class="export-section">
+            <h3 class="mb-3">Achievements</h3>
+            <div id="achievementsContainer">
+                <p class="text-muted">Complete milestones to unlock achievements!</p>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <h3>Learning Calendar</h3>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" id="prevMonth"><i class="bi bi-chevron-left"></i></button>
+                    <span id="currentMonth" class="mx-2 fw-bold"></span>
+                    <button class="btn btn-sm btn-outline-primary" id="nextMonth"><i class="bi bi-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Export/Reset Section -->
+        <div class="export-section">
+            <h3 class="mb-3">Data Management</h3>
+            <div class="d-flex flex-wrap">
+                <button class="btn-export" id="exportBtn"><i class="bi bi-download me-2"></i>Export Progress</button>
+                <button class="btn-reset" id="resetBtn"><i class="bi bi-arrow-clockwise me-2"></i>Reset Progress</button>
+            </div>
+        </div>
+
+        <!-- Learning Plan -->
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">Learning Plan</h2>
+                
+                <!-- Week 1 -->
+                <div class="week-card">
+                    <div class="week-header" style="background: linear-gradient(135deg, var(--info) 0%, #258391 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Week 1: Django Foundation</span>
+                            <span class="badge bg-light text-dark">Days 1-4</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="week-progress">
+                            <div class="week-progress-bar" id="week1Progress" style="width: 0%"></div>
+                        </div>
+                        <div class="day-card" data-day="1" data-week="1">
+                            <div class="d-flex">
+                                <div class="day-number">1</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Django Setup & Installation</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Django Basics</span>
+                                        <span class="tag">Setup</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Intro to Django, app lifecycle, installation</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Install Django + make first project (ecommerce). Run server & "Hello Django".</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="2" data-week="1">
+                            <div class="d-flex">
+                                <div class="day-number">2</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Django Apps & Structure</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Apps</span>
+                                        <span class="tag">URLs</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Web basics, project vs app, structure, venv</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Create new app (store). Add homepage view + URL mapping.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="3" data-week="1">
+                            <div class="d-flex">
+                                <div class="day-number">3</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">MVT Architecture</div>
+                                    <div class="day-tags">
+                                        <span class="tag">MVT</span>
+                                        <span class="tag">Templates</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">MVT architecture, URLs</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Add multiple pages (home, about, contact) with separate views + templates.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="4" data-week="1">
+                            <div class="d-flex">
+                                <div class="day-number">4</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Multi-App URL Configuration</div>
+                                    <div class="day-tags">
+                                        <span class="tag">URL Patterns</span>
+                                        <span class="tag">Apps</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Request lifecycle, URL patterns</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Create 2 apps (store, blog) & configure urls.py properly.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week 2 -->
+                <div class="week-card">
+                    <div class="week-header" style="background: linear-gradient(135deg, var(--warning) 0%, #dda20a 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Week 2: Views & Templates</span>
+                            <span class="badge bg-light text-dark">Days 5-8</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="week-progress">
+                            <div class="week-progress-bar" id="week2Progress" style="width: 0%"></div>
+                        </div>
+                        <div class="day-card" data-day="5" data-week="2">
+                            <div class="d-flex">
+                                <div class="day-number">5</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Views & HTTP Responses</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Views</span>
+                                        <span class="tag">HTTP</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Views, HTTP response, URL routes</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Build views returning HTML, JSON, and plain text responses.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="6" data-week="2">
+                            <div class="d-flex">
+                                <div class="day-number">6</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Dynamic Routes & CBVs</div>
+                                    <div class="day-tags">
+                                        <span class="tag">CBVs</span>
+                                        <span class="tag">Decorators</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Dynamic routes, FBVs, CBVs, decorators</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">FBV for product detail. CBV for blog detail. Use @login_required decorator.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="7" data-week="2">
+                            <div class="d-flex">
+                                <div class="day-number">7</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Templates & Context</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Templates</span>
+                                        <span class="tag">Context</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Templates, passing context</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Display a product list using context data in template.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="8" data-week="2">
+                            <div class="d-flex">
+                                <div class="day-number">8</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Template Inheritance & Bootstrap</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Inheritance</span>
+                                        <span class="tag">Bootstrap</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Template inheritance, static & media, Bootstrap</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Create base.html (navbar + footer). Inherit it in all pages. Add Bootstrap styling.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week 3 -->
+                <div class="week-card">
+                    <div class="week-header" style="background: linear-gradient(135deg, var(--success) 0%, #13855c 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Week 3: Models & CRUD</span>
+                            <span class="badge bg-light text-dark">Days 9-12</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="week-progress">
+                            <div class="week-progress-bar" id="week3Progress" style="width: 0%"></div>
+                        </div>
+                        <div class="day-card" data-day="9" data-week="3">
+                            <div class="d-flex">
+                                <div class="day-number">9</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Models & Relationships</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Models</span>
+                                        <span class="tag">Relationships</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Models & relationships</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Create Category, Product models (with ForeignKey).</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="10" data-week="3">
+                            <div class="d-flex">
+                                <div class="day-number">10</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">ORM & Migrations</div>
+                                    <div class="day-tags">
+                                        <span class="tag">ORM</span>
+                                        <span class="tag">Migrations</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">ORM, migrations, admin</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Run makemigrations, migrate. Add models to Admin. Insert sample data via Django shell.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="11" data-week="3">
+                            <div class="d-flex">
+                                <div class="day-number">11</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Template Control Flow</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Templates</span>
+                                        <span class="tag">Control Flow</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Control flow in templates</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Loop through products in template. Use if/else to show "Out of Stock".</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="12" data-week="3">
+                            <div class="d-flex">
+                                <div class="day-number">12</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">CRUD Operations</div>
+                                    <div class="day-tags">
+                                        <span class="tag">CRUD</span>
+                                        <span class="tag">Forms</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">CRUD + forms</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Build a CRUD app (e.g., "Notes"). Create, update, delete notes. Use Django forms.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week 4 -->
+                <div class="week-card">
+                    <div class="week-header" style="background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Week 4: Authentication & Admin</span>
+                            <span class="badge bg-light text-dark">Days 13-17</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="week-progress">
+                            <div class="week-progress-bar" id="week4Progress" style="width: 0%"></div>
+                        </div>
+                        <div class="day-card" data-day="13" data-week="4">
+                            <div class="d-flex">
+                                <div class="day-number">13</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">User Authentication</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Authentication</span>
+                                        <span class="tag">Users</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">User model, password validators</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Create superuser + basic login with django.contrib.auth.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="14" data-week="4">
+                            <div class="d-flex">
+                                <div class="day-number">14</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">User Registration</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Registration</span>
+                                        <span class="tag">Forms</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Permissions, authorization</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Registration page (username, email, password). Save user to DB.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="15" data-week="4">
+                            <div class="d-flex">
+                                <div class="day-number">15</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Login/Logout System</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Login</span>
+                                        <span class="tag">Logout</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Login/Logout with templates</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Login form + Logout button. Protect routes with @login_required.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="16" data-week="4">
+                            <div class="d-flex">
+                                <div class="day-number">16</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Django Admin Basics</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Admin</span>
+                                        <span class="tag">Models</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Django Admin basics</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Add Product & Category to admin. Explore list view.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="17" data-week="4">
+                            <div class="d-flex">
+                                <div class="day-number">17</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Admin Customization</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Admin</span>
+                                        <span class="tag">Customization</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Admin customization</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Add filters, search fields, ordering. Show related models in admin.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week 5 -->
+                <div class="week-card">
+                    <div class="week-header" style="background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Week 5: MySQL & Dynamic Projects</span>
+                            <span class="badge bg-light text-dark">Days 18-23</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="week-progress">
+                            <div class="week-progress-bar" id="week5Progress" style="width: 0%"></div>
+                        </div>
+                        <div class="day-card" data-day="18" data-week="5">
+                            <div class="d-flex">
+                                <div class="day-number">18</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">MySQL Setup</div>
+                                    <div class="day-tags">
+                                        <span class="tag">MySQL</span>
+                                        <span class="tag">Database</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">MySQL overview + queries</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Install MySQL, create DB, connect Django to MySQL.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="19" data-week="5">
+                            <div class="d-flex">
+                                <div class="day-number">19</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">MySQL Queries & ORM</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Queries</span>
+                                        <span class="tag">ORM</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Joins, clauses, conditions</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Write MySQL queries in Workbench. Mirror queries with Django ORM.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="20" data-week="5">
+                            <div class="d-flex">
+                                <div class="day-number">20</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">API Endpoints</div>
+                                    <div class="day-tags">
+                                        <span class="tag">API</span>
+                                        <span class="tag">JSON</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Render HTML/JSON responses</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Create API endpoint (returns JSON list of products).</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="21" data-week="5">
+                            <div class="d-flex">
+                                <div class="day-number">21</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Template Inheritance</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Templates</span>
+                                        <span class="tag">Inheritance</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Template inheritance for projects</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Setup base.html → extend for Home, About, Contact.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="22" data-week="5">
+                            <div class="d-flex">
+                                <div class="day-number">22</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Blog Project - User System</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Project</span>
+                                        <span class="tag">Users</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Dynamic Project basics</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Blog Project – User Registration + Profile update + Reset password.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="23" data-week="5">
+                            <div class="d-flex">
+                                <div class="day-number">23</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Blog CRUD & Permissions</div>
+                                    <div class="day-tags">
+                                        <span class="tag">CRUD</span>
+                                        <span class="tag">Permissions</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Blog post CRUD + permissions</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Create blog post. Update/delete only your own post. Add pagination.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week 6 -->
+                <div class="week-card">
+                    <div class="week-header" style="background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Week 6: Capstone Project</span>
+                            <span class="badge bg-light text-dark">Days 24-30</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="week-progress">
+                            <div class="week-progress-bar" id="week6Progress" style="width: 0%"></div>
+                        </div>
+                        <div class="day-card" data-day="24" data-week="6">
+                            <div class="d-flex">
+                                <div class="day-number">24</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Project Schema Design</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Project</span>
+                                        <span class="tag">Schema</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Project design principles</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Setup project schema (Product, Category, Order, User).</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="25" data-week="6">
+                            <div class="d-flex">
+                                <div class="day-number">25</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">User Authentication</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Auth</span>
+                                        <span class="tag">Users</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Authentication best practices</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">User auth (register/login/profile).</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="26" data-week="6">
+                            <div class="d-flex">
+                                <div class="day-number">26</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Product Catalog</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Catalog</span>
+                                        <span class="tag">Search</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">E-commerce design patterns</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Product listing with categories, search + pagination.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="27" data-week="6">
+                            <div class="d-flex">
+                                <div class="day-number">27</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Shopping Cart</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Cart</span>
+                                        <span class="tag">Session</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Cart implementation strategies</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Cart (add/remove/update).</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="28" data-week="6">
+                            <div class="d-flex">
+                                <div class="day-number">28</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Checkout System</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Checkout</span>
+                                        <span class="tag">Orders</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Payment processing basics</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Checkout & orders history.</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="29" data-week="6">
+                            <div class="d-flex">
+                                <div class="day-number">29</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Admin Customization</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Admin</span>
+                                        <span class="tag">Orders</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Advanced admin techniques</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Admin panel customization (order management).</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="day-card" data-day="30" data-week="6">
+                            <div class="d-flex">
+                                <div class="day-number">30</div>
+                                <div class="flex-grow-1">
+                                    <div class="day-title">Deployment & Testing</div>
+                                    <div class="day-tags">
+                                        <span class="tag">Deployment</span>
+                                        <span class="tag">Testing</span>
+                                    </div>
+                                    <div class="read-section">
+                                        <div class="section-label">Read:</div>
+                                        <div class="section-content">Deployment strategies and testing</div>
+                                    </div>
+                                    <div class="code-section">
+                                        <div class="section-label">Code:</div>
+                                        <div class="section-content">Test, debug, deploy (PythonAnywhere/Railway).</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-complete btn-sm mt-2">Mark Complete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Detail Modal -->
+    <div class="modal fade" id="dayDetailModal" tabindex="-1" aria-labelledby="dayDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dayDetailModalLabel">Day Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="dayDetailContent">
+                        <!-- Content will be dynamically loaded -->
+                    </div>
+                    
+                    <div class="time-tracker">
+                        <h5>Time Tracker</h5>
+                        <div class="timer-display" id="timerDisplay">00:00:00</div>
+                        <div class="text-center">
+                            <button class="btn-timer" id="startTimer"><i class="bi bi-play-fill"></i> Start</button>
+                            <button class="btn-timer stop" id="stopTimer"><i class="bi bi-stop-fill"></i> Stop</button>
+                            <button class="btn-timer" id="resetTimer"><i class="bi bi-arrow-clockwise"></i> Reset</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notes-section">
+                        <h5>Notes</h5>
+                        <textarea class="notes-textarea" id="dayNotes" placeholder="Add your notes for this day..."></textarea>
+                        <button class="btn btn-primary btn-sm mt-2" id="saveNotes">Save Notes</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="modalMarkComplete">Mark Complete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Django + MySQL Learning Journey</h5>
+                    <p>Track your progress and build amazing web applications</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>© 2023 Django Learning Dashboard. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', options);
+            
+            // Initialize progress from localStorage
+            let completedDays = JSON.parse(localStorage.getItem('completedDays')) || [];
+            let dayNotes = JSON.parse(localStorage.getItem('dayNotes')) || {};
+            let dayTimes = JSON.parse(localStorage.getItem('dayTimes')) || {};
+            let currentStreak = parseInt(localStorage.getItem('currentStreak')) || 0;
+            let currentMonth = new Date().getMonth();
+            let currentYear = new Date().getFullYear();
+            
+            // Day details data
+            const dayDetails = {
+                1: {
+                    title: "Django Setup & Installation",
+                    reading: "Intro to Django, app lifecycle, installation",
+                    coding: "Install Django + make first project (ecommerce). Run server & 'Hello Django'.",
+                    tasks: [
+                        { title: "Install Python and Django", description: "Set up your development environment" },
+                        { title: "Create Django project", description: "Use django-admin startproject" },
+                        { title: "Run development server", description: "Test with python manage.py runserver" },
+                        { title: "Create Hello World view", description: "Display your first Django page" }
+                    ]
+                },
+                2: {
+                    title: "Django Apps & Structure",
+                    reading: "Web basics, project vs app, structure, venv",
+                    coding: "Create new app (store). Add homepage view + URL mapping.",
+                    tasks: [
+                        { title: "Understand Django project structure", description: "Learn about settings.py, urls.py, etc." },
+                        { title: "Create a new app", description: "Use python manage.py startapp" },
+                        { title: "Add app to settings", description: "Include in INSTALLED_APPS" },
+                        { title: "Create first view", description: "Write a simple view function" },
+                        { title: "Configure URL routing", description: "Map view to a URL" }
+                    ]
+                },
+                3: {
+                    title: "MVT Architecture",
+                    reading: "MVT architecture, URLs",
+                    coding: "Add multiple pages (home, about, contact) with separate views + templates.",
+                    tasks: [
+                        { title: "Understand MVT pattern", description: "Model-View-Template architecture" },
+                        { title: "Create multiple views", description: "Home, about, contact pages" },
+                        { title: "Create templates", description: "HTML files for each page" },
+                        { title: "Configure URL patterns", description: "Map each view to a URL" }
+                    ]
+                },
+                4: {
+                    title: "Multi-App URL Configuration",
+                    reading: "Request lifecycle, URL patterns",
+                    coding: "Create 2 apps (store, blog) & configure urls.py properly.",
+                    tasks: [
+                        { title: "Create second app", description: "Blog app alongside store app" },
+                        { title: "Understand URL includes", description: "Use include() for app URLs" },
+                        { title: "Configure app-level URLs", description: "Create urls.py in each app" },
+                        { title: "Test URL routing", description: "Ensure all pages work correctly" }
+                    ]
+                },
+                5: {
+                    title: "Views & HTTP Responses",
+                    reading: "Views, HTTP response, URL routes",
+                    coding: "Build views returning HTML, JSON, and plain text responses.",
+                    tasks: [
+                        { title: "Create HTML responses", description: "Render templates with context" },
+                        { title: "Create JSON responses", description: "Use JsonResponse for API endpoints" },
+                        { title: "Create text responses", description: "Return plain text from views" },
+                        { title: "Understand HTTP methods", description: "GET, POST, PUT, DELETE" }
+                    ]
+                },
+                6: {
+                    title: "Dynamic Routes & CBVs",
+                    reading: "Dynamic routes, FBVs, CBVs, decorators",
+                    coding: "FBV for product detail. CBV for blog detail. Use @login_required decorator.",
+                    tasks: [
+                        { title: "Create dynamic URL patterns", description: "Use parameters in URLs" },
+                        { title: "Implement FBV", description: "Function-based view for product detail" },
+                        { title: "Implement CBV", description: "Class-based view for blog detail" },
+                        { title: "Use decorators", description: "Apply @login_required to views" }
+                    ]
+                },
+                7: {
+                    title: "Templates & Context",
+                    reading: "Templates, passing context",
+                    coding: "Display a product list using context data in template.",
+                    tasks: [
+                        { title: "Pass context to templates", description: "Send data from views to templates" },
+                        { title: "Display data in templates", description: "Use template variables" },
+                        { title: "Create product list view", description: "Show multiple products" },
+                        { title: "Template filtering", description: "Use template filters" }
+                    ]
+                },
+                8: {
+                    title: "Template Inheritance & Bootstrap",
+                    reading: "Template inheritance, static & media, Bootstrap",
+                    coding: "Create base.html (navbar + footer). Inherit it in all pages. Add Bootstrap styling.",
+                    tasks: [
+                        { title: "Create base template", description: "With navbar and footer" },
+                        { title: "Use template inheritance", description: "Extend base in other templates" },
+                        { title: "Add Bootstrap", description: "Include Bootstrap CSS/JS" },
+                        { title: "Style pages", description: "Apply Bootstrap classes" }
+                    ]
+                },
+                9: {
+                    title: "Models & Relationships",
+                    reading: "Models & relationships",
+                    coding: "Create Category, Product models (with ForeignKey).",
+                    tasks: [
+                        { title: "Understand Django models", description: "Model fields and options" },
+                        { title: "Create Category model", description: "Simple model for categories" },
+                        { title: "Create Product model", description: "With ForeignKey to Category" },
+                        { title: "Understand relationships", description: "One-to-many, many-to-many" }
+                    ]
+                },
+                10: {
+                    title: "ORM & Migrations",
+                    reading: "ORM, migrations, admin",
+                    coding: "Run makemigrations, migrate. Add models to Admin. Insert sample data via Django shell.",
+                    tasks: [
+                        { title: "Create migrations", description: "Use makemigrations command" },
+                        { title: "Apply migrations", description: "Use migrate command" },
+                        { title: "Register models in admin", description: "Make models appear in admin" },
+                        { title: "Insert sample data", description: "Use Django shell or admin" }
+                    ]
+                },
+                11: {
+                    title: "Template Control Flow",
+                    reading: "Control flow in templates",
+                    coding: "Loop through products in template. Use if/else to show 'Out of Stock'.",
+                    tasks: [
+                        { title: "Use for loops", description: "Iterate over querysets" },
+                        { title: "Use if/else", description: "Conditional display in templates" },
+                        { title: "Template filters", description: "Modify data display" },
+                        { title: "Template tags", description: "Custom template functionality" }
+                    ]
+                },
+                12: {
+                    title: "CRUD Operations",
+                    reading: "CRUD + forms",
+                    coding: "Build a CRUD app (e.g., 'Notes'). Create, update, delete notes. Use Django forms.",
+                    tasks: [
+                        { title: "Create model", description: "Note model with title and content" },
+                        { title: "Create form", description: "ModelForm for Note" },
+                        { title: "Implement create view", description: "Add new notes" },
+                        { title: "Implement update view", description: "Edit existing notes" },
+                        { title: "Implement delete view", description: "Remove notes" }
+                    ]
+                },
+                13: {
+                    title: "User Authentication",
+                    reading: "User model, password validators",
+                    coding: "Create superuser + basic login with django.contrib.auth.",
+                    tasks: [
+                        { title: "Understand Django auth", description: "Built-in authentication system" },
+                        { title: "Create superuser", description: "Use createsuperuser command" },
+                        { title: "Set up auth URLs", description: "Include django.contrib.auth.urls" },
+                        { title: "Create login template", description: "Template for login page" }
+                    ]
+                },
+                14: {
+                    title: "User Registration",
+                    reading: "Permissions, authorization",
+                    coding: "Registration page (username, email, password). Save user to DB.",
+                    tasks: [
+                        { title: "Create registration form", description: "UserCreationForm or custom" },
+                        { title: "Create registration view", description: "Handle form submission" },
+                        { title: "Save user to database", description: "Create User object" },
+                        { title: "Add registration URL", description: "Map to registration view" }
+                    ]
+                },
+                15: {
+                    title: "Login/Logout System",
+                    reading: "Login/Logout with templates",
+                    coding: "Login form + Logout button. Protect routes with @login_required.",
+                    tasks: [
+                        { title: "Create login view", description: "Handle user authentication" },
+                        { title: "Create logout view", description: "Handle user logout" },
+                        { title: "Protect views", description: "Use @login_required decorator" },
+                        { title: "Test login/logout", description: "Ensure authentication works" }
+                    ]
+                },
+                16: {
+                    title: "Django Admin Basics",
+                    reading: "Django Admin basics",
+                    coding: "Add Product & Category to admin. Explore list view.",
+                    tasks: [
+                        { title: "Register models", description: "Add to admin.py" },
+                        { title: "Customize list display", description: "Show relevant fields" },
+                        { title: "Explore admin interface", description: "CRUD operations in admin" },
+                        { title: "Admin search", description: "Add search fields" }
+                    ]
+                },
+                17: {
+                    title: "Admin Customization",
+                    reading: "Admin customization",
+                    coding: "Add filters, search fields, ordering. Show related models in admin.",
+                    tasks: [
+                        { title: "Add list filters", description: "Filter by category, etc." },
+                        { title: "Customize search", description: "Search in multiple fields" },
+                        { title: "Set ordering", description: "Default ordering in admin" },
+                        { title: "Show related models", description: "Inline editing" }
+                    ]
+                },
+                18: {
+                    title: "MySQL Setup",
+                    reading: "MySQL overview + queries",
+                    coding: "Install MySQL, create DB, connect Django to MySQL.",
+                    tasks: [
+                        { title: "Install MySQL", description: "Set up MySQL server" },
+                        { title: "Create database", description: "Use MySQL command line or tool" },
+                        { title: "Install MySQL connector", description: "mysqlclient package" },
+                        { title: "Configure Django settings", description: "Update DATABASES setting" }
+                    ]
+                },
+                19: {
+                    title: "MySQL Queries & ORM",
+                    reading: "Joins, clauses, conditions",
+                    coding: "Write MySQL queries in Workbench. Mirror queries with Django ORM.",
+                    tasks: [
+                        { title: "Write SQL queries", description: "SELECT, JOIN, WHERE clauses" },
+                        { title: "Translate to ORM", description: "Equivalent Django ORM queries" },
+                        { title: "Understand query optimization", description: "Indexing, performance" },
+                        { title: "Use Django shell", description: "Test ORM queries" }
+                    ]
+                },
+                20: {
+                    title: "API Endpoints",
+                    reading: "Render HTML/JSON responses",
+                    coding: "Create API endpoint (returns JSON list of products).",
+                    tasks: [
+                        { title: "Create API view", description: "Return JSON response" },
+                        { title: "Serialize data", description: "Convert models to JSON" },
+                        { title: "Handle API requests", description: "GET, POST methods" },
+                        { title: "Test API endpoint", description: "Use Postman or curl" }
+                    ]
+                },
+                21: {
+                    title: "Template Inheritance",
+                    reading: "Template inheritance for projects",
+                    coding: "Setup base.html → extend for Home, About, Contact.",
+                    tasks: [
+                        { title: "Create project base template", description: "With project-specific elements" },
+                        { title: "Extend base template", description: "For each page" },
+                        { title: "Use template blocks", description: "Content, title, etc." },
+                        { title: "Test template inheritance", description: "Ensure all pages work" }
+                    ]
+                },
+                22: {
+                    title: "Blog Project - User System",
+                    reading: "Dynamic Project basics",
+                    coding: "Blog Project – User Registration + Profile update + Reset password.",
+                    tasks: [
+                        { title: "Create blog app", description: "New Django app for blog" },
+                        { title: "Implement user registration", description: "For blog users" },
+                        { title: "Create profile model", description: "Extended user information" },
+                        { title: "Implement password reset", description: "Email-based reset" }
+                    ]
+                },
+                23: {
+                    title: "Blog CRUD & Permissions",
+                    reading: "Blog post CRUD + permissions",
+                    coding: "Create blog post. Update/delete only your own post. Add pagination.",
+                    tasks: [
+                        { title: "Create Post model", description: "With title, content, author" },
+                        { title: "Implement CRUD views", description: "For blog posts" },
+                        { title: "Add permissions", description: "Users can only edit their posts" },
+                        { title: "Add pagination", description: "For post lists" }
+                    ]
+                },
+                24: {
+                    title: "Project Schema Design",
+                    reading: "Project design principles",
+                    coding: "Setup project schema (Product, Category, Order, User).",
+                    tasks: [
+                        { title: "Design database schema", description: "For e-commerce project" },
+                        { title: "Create Product model", description: "With details, price, etc." },
+                        { title: "Create Category model", description: "For product categorization" },
+                        { title: "Create Order model", description: "With user, items, status" }
+                    ]
+                },
+                25: {
+                    title: "User Authentication",
+                    reading: "Authentication best practices",
+                    coding: "User auth (register/login/profile).",
+                    tasks: [
+                        { title: "Implement registration", description: "For e-commerce users" },
+                        { title: "Implement login", description: "With session management" },
+                        { title: "Create profile page", description: "User information display" },
+                        { title: "Profile update", description: "Allow users to edit profile" }
+                    ]
+                },
+                26: {
+                    title: "Product Catalog",
+                    reading: "E-commerce design patterns",
+                    coding: "Product listing with categories, search + pagination.",
+                    tasks: [
+                        { title: "Create product list view", description: "Display all products" },
+                        { title: "Add category filtering", description: "Filter by category" },
+                        { title: "Implement search", description: "By product name/description" },
+                        { title: "Add pagination", description: "For product listings" }
+                    ]
+                },
+                27: {
+                    title: "Shopping Cart",
+                    reading: "Cart implementation strategies",
+                    coding: "Cart (add/remove/update).",
+                    tasks: [
+                        { title: "Design cart system", description: "Session-based or database" },
+                        { title: "Add to cart", description: "Functionality to add products" },
+                        { title: "Remove from cart", description: "Remove items from cart" },
+                        { title: "Update cart", description: "Change quantities" }
+                    ]
+                },
+                28: {
+                    title: "Checkout System",
+                    reading: "Payment processing basics",
+                    coding: "Checkout & orders history.",
+                    tasks: [
+                        { title: "Create checkout process", description: "Multi-step or single page" },
+                        { title: "Order creation", description: "Convert cart to order" },
+                        { title: "Payment integration", description: "Mock or real payment" },
+                        { title: "Order history", description: "Display user's past orders" }
+                    ]
+                },
+                29: {
+                    title: "Admin Customization",
+                    reading: "Advanced admin techniques",
+                    coding: "Admin panel customization (order management).",
+                    tasks: [
+                        { title: "Customize order admin", description: "For order management" },
+                        { title: "Add order status", description: "Pending, processing, shipped, etc." },
+                        { title: "Admin actions", description: "Bulk update orders" },
+                        { title: "Order statistics", description: "In admin dashboard" }
+                    ]
+                },
+                30: {
+                    title: "Deployment & Testing",
+                    reading: "Deployment strategies and testing",
+                    coding: "Test, debug, deploy (PythonAnywhere/Railway).",
+                    tasks: [
+                        { title: "Write tests", description: "Unit and integration tests" },
+                        { title: "Debug issues", description: "Fix any remaining bugs" },
+                        { title: "Prepare for deployment", description: "Settings, static files" },
+                        { title: "Deploy project", description: "To chosen platform" }
+                    ]
+                }
+            };
+            
+            // Update UI
+            updateProgress();
+            updateDayCards();
+            updateWeekProgress();
+            updateAchievements();
+            renderCalendar();
+            
+            // Add event listeners to day cards
+            const dayCards = document.querySelectorAll('.day-card');
+            dayCards.forEach(card => {
+                const button = card.querySelector('.btn-complete');
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const day = parseInt(card.dataset.day);
+                    toggleDayCompletion(day);
+                });
+                
+                card.addEventListener('click', function() {
+                    const day = parseInt(card.dataset.day);
+                    showDayDetails(day);
+                });
+            });
+            
+            // Timer variables
+            let timerInterval;
+            let timerSeconds = 0;
+            let currentDayForTimer = null;
+            
+            // Timer event listeners
+            document.getElementById('startTimer').addEventListener('click', startTimer);
+            document.getElementById('stopTimer').addEventListener('click', stopTimer);
+            document.getElementById('resetTimer').addEventListener('click', resetTimer);
+            
+            // Notes event listener
+            document.getElementById('saveNotes').addEventListener('click', saveNotes);
+            
+            // Modal event listener
+            document.getElementById('modalMarkComplete').addEventListener('click', function() {
+                if (currentDayForTimer) {
+                    toggleDayCompletion(currentDayForTimer);
+                    bootstrap.Modal.getInstance(document.getElementById('dayDetailModal')).hide();
+                }
+            });
+            
+            // Export/Reset event listeners
+            document.getElementById('exportBtn').addEventListener('click', exportProgress);
+            document.getElementById('resetBtn').addEventListener('click', resetProgress);
+            
+            // Calendar navigation
+            document.getElementById('prevMonth').addEventListener('click', function() {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar();
+            });
+            
+            document.getElementById('nextMonth').addEventListener('click', function() {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar();
+            });
+            
+            function toggleDayCompletion(day) {
+                const index = completedDays.indexOf(day);
+                if (index > -1) {
+                    completedDays.splice(index, 1);
+                } else {
+                    completedDays.push(day);
+                    // Check if it's consecutive day
+                    if (day === (completedDays.length > 1 ? Math.max(...completedDays.filter(d => d !== day)) + 1 : 1)) {
+                        currentStreak++;
+                        localStorage.setItem('currentStreak', currentStreak);
+                    }
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('completedDays', JSON.stringify(completedDays));
+                
+                // Update UI
+                updateProgress();
+                updateDayCards();
+                updateWeekProgress();
+                updateAchievements();
+                renderCalendar();
+            }
+            
+            function updateProgress() {
+                const totalDays = 30;
+                const completedCount = completedDays.length;
+                const remainingDays = totalDays - completedCount;
+                const progressPercent = Math.round((completedCount / totalDays) * 100);
+                
+                // Update progress circle
+                const progressCircle = document.getElementById('progressCircle');
+                progressCircle.style.background = `conic-gradient(var(--success) 0% ${progressPercent}%, #e9ecef ${progressPercent}% 100%)`;
+                
+                // Update progress text
+                document.getElementById('progressValue').textContent = `${progressPercent}%`;
+                document.getElementById('completedDays').textContent = completedCount;
+                document.getElementById('completedCount').textContent = completedCount;
+                document.getElementById('remainingDays').textContent = remainingDays;
+                document.getElementById('currentStreak').textContent = currentStreak;
+                
+                // Update current day
+                if (completedCount < totalDays) {
+                    document.getElementById('currentDay').textContent = `Day ${completedCount + 1}`;
+                } else {
+                    document.getElementById('currentDay').textContent = 'Completed!';
+                    document.getElementById('currentDay').classList.add('animate-pulse');
+                }
+            }
+            
+            function updateDayCards() {
+                const dayCards = document.querySelectorAll('.day-card');
+                dayCards.forEach(card => {
+                    const day = parseInt(card.dataset.day);
+                    const button = card.querySelector('.btn-complete');
+                    
+                    if (completedDays.includes(day)) {
+                        card.classList.add('completed');
+                        button.innerHTML = '<i class="bi bi-check-circle-fill"></i> Completed';
+                        button.classList.remove('btn-primary');
+                        button.classList.add('btn-success');
+                    } else {
+                        card.classList.remove('completed');
+                        button.innerHTML = 'Mark Complete';
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-primary');
+                    }
+                });
+            }
+            
+            function updateWeekProgress() {
+                // Week 1 (Days 1-4)
+                const week1Days = [1, 2, 3, 4];
+                const week1Completed = week1Days.filter(day => completedDays.includes(day)).length;
+                const week1Percent = Math.round((week1Completed / week1Days.length) * 100);
+                document.getElementById('week1Progress').style.width = `${week1Percent}%`;
+                
+                // Week 2 (Days 5-8)
+                const week2Days = [5, 6, 7, 8];
+                const week2Completed = week2Days.filter(day => completedDays.includes(day)).length;
+                const week2Percent = Math.round((week2Completed / week2Days.length) * 100);
+                document.getElementById('week2Progress').style.width = `${week2Percent}%`;
+                
+                // Week 3 (Days 9-12)
+                const week3Days = [9, 10, 11, 12];
+                const week3Completed = week3Days.filter(day => completedDays.includes(day)).length;
+                const week3Percent = Math.round((week3Completed / week3Days.length) * 100);
+                document.getElementById('week3Progress').style.width = `${week3Percent}%`;
+                
+                // Week 4 (Days 13-17)
+                const week4Days = [13, 14, 15, 16, 17];
+                const week4Completed = week4Days.filter(day => completedDays.includes(day)).length;
+                const week4Percent = Math.round((week4Completed / week4Days.length) * 100);
+                document.getElementById('week4Progress').style.width = `${week4Percent}%`;
+                
+                // Week 5 (Days 18-23)
+                const week5Days = [18, 19, 20, 21, 22, 23];
+                const week5Completed = week5Days.filter(day => completedDays.includes(day)).length;
+                const week5Percent = Math.round((week5Completed / week5Days.length) * 100);
+                document.getElementById('week5Progress').style.width = `${week5Percent}%`;
+                
+                // Week 6 (Days 24-30)
+                const week6Days = [24, 25, 26, 27, 28, 29, 30];
+                const week6Completed = week6Days.filter(day => completedDays.includes(day)).length;
+                const week6Percent = Math.round((week6Completed / week6Days.length) * 100);
+                document.getElementById('week6Progress').style.width = `${week6Percent}%`;
+            }
+            
+            function updateAchievements() {
+                const achievementsContainer = document.getElementById('achievementsContainer');
+                achievementsContainer.innerHTML = '';
+                
+                const achievements = [];
+                
+                // First Day Achievement
+                if (completedDays.includes(1)) {
+                    achievements.push({ icon: 'bi-star-fill', text: 'First Step', desc: 'Completed your first day' });
+                }
+                
+                // Week 1 Achievement
+                const week1Days = [1, 2, 3, 4];
+                if (week1Days.every(day => completedDays.includes(day))) {
+                    achievements.push({ icon: 'bi-trophy-fill', text: 'Week 1 Warrior', desc: 'Completed all Week 1 days' });
+                }
+                
+                // Halfway Achievement
+                if (completedDays.length >= 15) {
+                    achievements.push({ icon: 'bi-flag-fill', text: 'Halfway There', desc: 'Completed 15+ days' });
+                }
+                
+                // Week 3 Achievement
+                const week3Days = [9, 10, 11, 12];
+                if (week3Days.every(day => completedDays.includes(day))) {
+                    achievements.push({ icon: 'bi-gem', text: 'Model Master', desc: 'Completed all Week 3 days' });
+                }
+                
+                // Streak Achievement
+                if (currentStreak >= 7) {
+                    achievements.push({ icon: 'bi-fire', text: 'On Fire', desc: '7+ day streak' });
+                }
+                
+                // Completion Achievement
+                if (completedDays.length === 30) {
+                    achievements.push({ icon: 'bi-award-fill', text: 'Django Master', desc: 'Completed all 30 days' });
+                }
+                
+                if (achievements.length === 0) {
+                    achievementsContainer.innerHTML = '<p class="text-muted">Complete milestones to unlock achievements!</p>';
+                } else {
+                    achievements.forEach(achievement => {
+                        const badge = document.createElement('div');
+                        badge.className = 'achievement-badge';
+                        badge.innerHTML = `<i class="bi ${achievement.icon}"></i>${achievement.text}`;
+                        badge.title = achievement.desc;
+                        achievementsContainer.appendChild(badge);
+                    });
+                }
+            }
+            
+            function renderCalendar() {
+                const calendarGrid = document.getElementById('calendarGrid');
+                const currentMonthElement = document.getElementById('currentMonth');
+                
+                // Set month name
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+                currentMonthElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                
+                // Clear calendar
+                calendarGrid.innerHTML = '';
+                
+                // Add day headers
+                const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayHeaders.forEach(day => {
+                    const header = document.createElement('div');
+                    header.className = 'text-center fw-bold';
+                    header.textContent = day;
+                    calendarGrid.appendChild(header);
+                });
+                
+                // Get first day of month and number of days
+                const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                
+                // Add empty cells for days before month starts
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day other-month';
+                    calendarGrid.appendChild(emptyDay);
+                }
+                
+                // Add days of the month
+                const today = new Date();
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = day;
+                    
+                    // Check if this is today
+                    if (currentMonth === today.getMonth() && currentYear === today.getFullYear() && day === today.getDate()) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    // Check if this day is completed (approximate - assumes 1 day per calendar day)
+                    const dayNumber = Math.min(day, 30); // Cap at 30 days
+                    if (completedDays.includes(dayNumber)) {
+                        dayElement.classList.add('completed');
+                    }
+                    
+                    calendarGrid.appendChild(dayElement);
+                }
+            }
+            
+            function showDayDetails(day) {
+                currentDayForTimer = day;
+                const details = dayDetails[day];
+                const modal = new bootstrap.Modal(document.getElementById('dayDetailModal'));
+                
+                // Update modal title
+                document.getElementById('dayDetailModalLabel').textContent = `Day ${day}: ${details.title}`;
+                
+                // Update modal content
+                const content = document.getElementById('dayDetailContent');
+                content.innerHTML = `
+                    <div class="mb-4">
+                        <h5>Reading Material</h5>
+                        <p>${details.reading}</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Coding Tasks</h5>
+                        <p>${details.coding}</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Checklist</h5>
+                        <div class="task-list">
+                            ${details.tasks.map(task => `
+                                <div class="task-item">
+                                    <h6>${task.title}</h6>
+                                    <p>${task.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                // Load notes
+                const notesTextarea = document.getElementById('dayNotes');
+                notesTextarea.value = dayNotes[day] || '';
+                
+                // Reset timer
+                resetTimer();
+                
+                // Load time if exists
+                if (dayTimes[day]) {
+                    timerSeconds = dayTimes[day];
+                    updateTimerDisplay();
+                }
+                
+                modal.show();
+            }
+            
+            function startTimer() {
+                if (!timerInterval) {
+                    timerInterval = setInterval(function() {
+                        timerSeconds++;
+                        updateTimerDisplay();
+                    }, 1000);
+                }
+            }
+            
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    
+                    // Save time
+                    if (currentDayForTimer) {
+                        dayTimes[currentDayForTimer] = timerSeconds;
+                        localStorage.setItem('dayTimes', JSON.stringify(dayTimes));
+                    }
+                }
+            }
+            
+            function resetTimer() {
+                stopTimer();
+                timerSeconds = 0;
+                updateTimerDisplay();
+            }
+            
+            function updateTimerDisplay() {
+                const hours = Math.floor(timerSeconds / 3600);
+                const minutes = Math.floor((timerSeconds % 3600) / 60);
+                const seconds = timerSeconds % 60;
+                
+                const display = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('timerDisplay').textContent = display;
+            }
+            
+            function saveNotes() {
+                const notesTextarea = document.getElementById('dayNotes');
+                if (currentDayForTimer) {
+                    dayNotes[currentDayForTimer] = notesTextarea.value;
+                    localStorage.setItem('dayNotes', JSON.stringify(dayNotes));
+                    
+                    // Show success message
+                    const originalText = document.getElementById('saveNotes').innerHTML;
+                    document.getElementById('saveNotes').innerHTML = '<i class="bi bi-check-circle-fill"></i> Saved!';
+                    setTimeout(() => {
+                        document.getElementById('saveNotes').innerHTML = originalText;
+                    }, 2000);
+                }
+            }
+            
+            function exportProgress() {
+                // Format the data as text
+                let textContent = 'Django Learning Progress Report\n';
+                textContent += '================================\n\n';
+                textContent += `Export Date: ${new Date().toLocaleString()}\n`;
+                textContent += `Current Streak: ${currentStreak} days\n\n`;
+                
+                textContent += 'Completed Days:\n';
+                textContent += '---------------\n';
+                completedDays.sort((a, b) => a - b).forEach(day => {
+                    textContent += `Day ${day}\n`;
+                });
+                
+                textContent += '\nStudy Times:\n';
+                textContent += '------------\n';
+                Object.keys(dayTimes).sort((a, b) => a - b).forEach(day => {
+                    const seconds = dayTimes[day];
+                    const hours = Math.floor(seconds / 3600);
+                    const minutes = Math.floor((seconds % 3600) / 60);
+                    textContent += `Day ${day}: ${hours}h ${minutes}m\n`;
+                });
+                
+                textContent += '\nNotes:\n';
+                textContent += '------\n';
+                Object.keys(dayNotes).sort((a, b) => a - b).forEach(day => {
+                    if (dayNotes[day]) {
+                        textContent += `\nDay ${day}:\n${dayNotes[day]}\n`;
+                    }
+                });
+                
+                const dataUri = 'data:text/plain;charset=utf-8,'+ encodeURIComponent(textContent);
+                const exportFileDefaultName = 'django-learning-progress.txt';
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            }
+            
+            function resetProgress() {
+                if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                    // Clear localStorage
+                    localStorage.removeItem('completedDays');
+                    localStorage.removeItem('dayNotes');
+                    localStorage.removeItem('dayTimes');
+                    localStorage.removeItem('currentStreak');
+                    
+                    // Reset variables
+                    completedDays = [];
+                    dayNotes = {};
+                    dayTimes = {};
+                    currentStreak = 0;
+                    
+                    // Update UI
+                    updateProgress();
+                    updateDayCards();
+                    updateWeekProgress();
+                    updateAchievements();
+                    renderCalendar();
+                    
+                    // Show success message
+                    alert('Progress has been reset successfully!');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
